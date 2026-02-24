@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Vyonne Cosmic Touch 🌟</title>
+<style>
+body {margin:0;overflow:hidden;background:black;color:white;font-family:Arial;}
+#passwordScreen,#winScreen{
+  position:absolute;width:100%;height:100%;
+  display:flex;justify-content:center;align-items:center;
+  flex-direction:column;background:black;z-index:10;text-align:center;
+}
+input,button{padding:10px;margin-top:10px;font-size:16px}
+#hud{position:absolute;top:10px;left:10px;font-size:16px;text-align:left;}
+canvas{display:block;}
+</style>
+</head>
+<body>
+
+<div id="passwordScreen">
+<h2>Enter Secret Password 💖</h2>
+<input type="password" id="pass">
+<button onclick="startGame()">Start Game</button>
+<p id="error"></p>
+</div>
+
+<canvas id="game"></canvas>
+<div id="hud"></div>
+
+<div id="winScreen" style="display:none">
+🎆 GAME COMPLETE 🎆<br><br>
+💖 Vyonne, every touch is a memory 💖
+</div>
+
+<script>
+const PASSWORD="Vyonne2026";
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let items=[], stars=[], score=0, level=1, maxLevel=5, gameOver=false;
+let startTime, gameDuration=60; // each level 60s
+let messages=[
+  "🌸 Friends forever!",
+  "💖 You make me smile!",
+  "🌟 Shine bright always!",
+  "✨ Adventure awaits us!",
+  "💫 Our bond is magical!"
+];
+
+// Create background stars
+for(let i=0;i<200;i++){
+  stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2});
+}
+
+// Password
+function startGame(){
+  if(pass.value !== PASSWORD){
+    error.innerText="Wrong password 💔";
+    return;
+  }
+  passwordScreen.style.display="none";
+  startTime = Date.now();
+  spawnItems();
+  requestAnimationFrame(update);
+}
+
+// Spawn falling items
+function spawnItems(){
+  items=[];
+  for(let i=0;i<5+level;i++){ // easy number of items
+    items.push({
+      x:Math.random()*canvas.width,
+      y:Math.random()*-canvas.height,
+      size:30,
+      speed:1 + level*0.3
+    });
+  }
+}
+
+// Touch to catch items
+canvas.addEventListener("touchstart", e=>{
+  const touch = e.touches[0];
+  items.forEach((it,i)=>{
+    if(touch.clientX>it.x && touch.clientX<it.x+it.size &&
+       touch.clientY>it.y && touch.clientY<it.y+it.size){
+         score+=10;
+         items.splice(i,1);
+    }
+  });
+});
+
+// Game loop
+function update(){
+  if(gameOver) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Stars background
+  ctx.fillStyle="white";
+  stars.forEach(s=>{
+    ctx.fillRect(s.x,s.y,s.size,s.size);
+    s.y+=0.5; // slow moving stars
+    if(s.y>canvas.height){
+      s.y=0;
+      s.x=Math.random()*canvas.width;
+    }
+  });
+
+  // Draw falling items
+  ctx.fillStyle="cyan";
+  items.forEach((it,i)=>{
+    ctx.fillRect(it.x,it.y,it.size,it.size);
+    it.y += it.speed;
+    if(it.y>canvas.height) items.splice(i,1);
+  });
+
+  // If items are gone, spawn new batch
+  if(items.length===0) spawnItems();
+
+  // HUD
+  let elapsed = Math.floor((Date.now()-startTime)/1000);
+  let remaining = gameDuration - elapsed;
+  hud.innerHTML=`Score: ${score}<br>Level: ${level}<br>Time: ${remaining}s`;
+
+  // Level complete
+  if(remaining<=0){
+    if(level<maxLevel){
+      level++;
+      startTime = Date.now();
+      alert(messages[level-2] || "💖 Keep touching!");
+      spawnItems();
+    } else {
+      gameOver = true;
+      winScreen.style.display="flex";
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
+// Resize canvas on orientation change
+window.addEventListener("resize", ()=>{
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
